@@ -16,10 +16,12 @@ timezone:
 
 title: Holaf # the main title
 
-tagline: Breaking Security, Building Knowledge # it will display as the subtitle
+tagline: "Breaking Security, <br>Building Knowledge" # it will display as the subtitle
 
 description: >- # used by seo meta and the atom feed
-  A minimal, responsive and feature-rich Jekyll theme for technical writing.
+  A technical blog focusing on security vulnerability analysis, web hacking, 
+  and cybersecurity research. Featuring CTF writeups, security tool reviews,
+  and in-depth explorations of security concepts.
 
 # Fill in the protocol & hostname for your site.
 # E.g. 'https://username.github.io', note that it does not end with a '/'.
