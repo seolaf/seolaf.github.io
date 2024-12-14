@@ -1,5 +1,5 @@
 ---
-title: ["[Webhacking.kr] ouroboros golf (sqli - 300)"]
+title: ["[Webhacking.kr] ouroboros golf (sqli - ???)"]
 date: 2024-12-10 09:00:00 +0900
 categories: [writeup, webhacking.kr]
 tags: [web, sqli, quine, golf]
