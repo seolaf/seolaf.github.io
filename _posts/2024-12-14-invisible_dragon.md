@@ -83,3 +83,38 @@ http://webhacking.kr:10016?column=username&keyword=admin&ie=utf8
 ```sql
 select * from prob_invisible_dragon where convert(username using utf8)='admin'
 ```  
+
+코드에서 `parse_str` 함수가 취약한 방식으로 사용되고 있다.  
+Variable variables를 사용해 쿼리스트링의 키를 변수 이름으로 직접 사용하기 때문에 어떤 변수든 덮어쓸 수 있다.
+
+`$_SESSION['format']` 변수를 직접 조작해서 써보자.  
+정규표현식으로 `session` 문자열을 검사하지만, URL 인코딩으로 간단히 우회가 가능하다.  
+
+문제는 `column`의 길이 제한이다.  
+MYSQL에서 `CONVERT()` 함수는  
+* CONVERT(expr USING transcoding_name)
+* CONVERT(expr, type)
+두 가지 방식으로 사용된다.  
+
+아무리 짧게 사용을 해도 `convert({PAYLOAD},char)` 이렇게 구성되므로, 페이로드에 최대 10자리여야 한다.  
+
+먼저 간단히 `'1'='1'`로 테스트를 해보자.  
+```
+?_SE%53SION[format]=convert(%s,char)&column=1&keyword=1
+```
+
+이렇게 파라미터를 주면, SQL 쿼리는 아래와 같이 구성된다.  
+
+```sql
+select * from prob_invisible_dragon where convert(1,char)='1'
+```
+
+`1`이라는 결과가 나왔다.  
+
+즉, 데이터베이스에는 `secret` 컬럼 하나 뿐이고, 첫번째 값이 `1`이라는 뜻이다.  
+
+
+```
+?_SE%53SION[format]=convert(%s,char(1))&column=secret&keyword=F
+```
+이런 형태로 Blind SQLi를 하면 될 것 같다.
