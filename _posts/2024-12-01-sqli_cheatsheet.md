@@ -26,6 +26,7 @@ mid(id,1,1)
 right(left(id,1),1)
 lpad(id,1,space(1))
 reverse(right(reverse(id),1))
+convert(id,char(1))
 ```
 
 ### String Compare without Single Quotation
