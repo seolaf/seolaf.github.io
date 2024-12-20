@@ -1,5 +1,5 @@
 ---
-title: ["[TFCCTF 2024] virtual-rev"]
+title: ["[TFCCTF 2024 - rev] virtual-rev"]
 date: 2024-10-17 09:00:00 +0900
 categories: [writeup, ctf]
 tags: [reversing, vm]

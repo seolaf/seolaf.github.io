@@ -1,5 +1,5 @@
 ---
-title: ["[CCE 2023] impossible"]
+title: ["[CCE 2023 - rev] impossible"]
 date: 2024-10-21 09:00:00 +0900
 categories: [writeup, ctf]
 tags: [reversing, exe]

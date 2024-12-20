@@ -2,7 +2,7 @@
 title: ["SQL Injection Cheat Sheet"]
 date: 2024-12-01 09:00:00 +0900
 categories: [cheatsheet, sqli]
-tags: [web, cheatsheet]
+tags: [web, sqli, cheatsheet]
 ---
 
 ### White Space
