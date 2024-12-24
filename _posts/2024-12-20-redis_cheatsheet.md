@@ -86,6 +86,22 @@ http://localhost:3000/init?uid[]=test&uid[]={"level":"admin"}
 Command("set", "test", "{'level':'admin'}")
 ```
 
+#### Express.js의 쿼리스트링 파싱
+1. 일반적인 배열 표현 방식
+   ```
+   ?q[]=get&q[]=log_info
+   ```
+   이렇게 하면 `log_query = ['get', 'log_info']` 형태로 파싱된다.
+
+2. 인덱스가 있는 배열 표현 방식
+   ```
+   ?q[]=get&q[1][]=log_info
+   ```
+   이렇게 하면 `log_query = ['get', ['log_info']]` 형태로 파싱된다.
+
+`node.js`의 `send_command()`함수는 인자를 배열 형태로 오기를 기대하기 때문에 2번과 같은 방식을 사용해야 한다.
+
+
 #### 취약점이 발생하는 이유
 1. 파라미터 검증 부재: req.query의 값을 직접 Redis command에 전달
 2. 배열 타입 처리 방식: Array.isArray() 체크를 통과하면서도 악의적인 데이터 주입 가능
