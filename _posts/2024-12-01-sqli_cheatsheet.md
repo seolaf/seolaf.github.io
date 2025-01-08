@@ -34,6 +34,7 @@ convert(id,char(1))
 admin=0x61646d696e                                 // using Hex
 admin=0b0110000101100100011011010110100101101110   // using Binary
 substr(monthname(from_unixtime(1)),2,1)='a'        // using Gadget
+crc32(id)=2282622326                               // using crc32 (md, sha, base also work)
 ```
 
 ### Number Expression
@@ -57,3 +58,6 @@ True-True = 0
 Make sure to check `secure-file-priv` path.  
 When `mysql/config/my.cnf` has `secure-file-priv=/tmp/` set, it means:  
   MYSQL's `INTO OUTFILE` command can only write files to the `/tmp/` directory
+
+### SQL Injection Bypass
+[https://www.exploit-db.com/papers/17934](https://www.exploit-db.com/papers/17934)
