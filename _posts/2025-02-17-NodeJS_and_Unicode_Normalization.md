@@ -123,10 +123,10 @@ for key in keys.split("\r\n"):
    - 네트워크 분리
 
 ## Reference
-[Node.js url.parse() 취약점 컨트리뷰션](https://toss.tech/article/nodejs-security-contribution)
-[nodejs unicode](https://lactea.kr/entry/nodejs-unicode)
-[JavaScript type confusion: Bypassed input validation](https://snyk.io/blog/remediate-javascript-type-confusion-bypassed-input-validation/)
-[Hostname spoofing](https://hackerone.com/reports/678487)
-[Unicode Normalization](https://book.hacktricks.wiki/en/pentesting-web/unicode-injection/index.html)
-[Alternative Unicode Character](https://appcheck-ng.com/wp-content/uploads/unicode_normalization.html)
-[SSRF Gopher](https://book.hacktricks.wiki/en/pentesting-web/ssrf-server-side-request-forgery/index.html#gopher)
+[Node.js url.parse() 취약점 컨트리뷰션](https://toss.tech/article/nodejs-security-contribution)  
+[nodejs unicode](https://lactea.kr/entry/nodejs-unicode)  
+[JavaScript type confusion: Bypassed input validation](https://snyk.io/blog/remediate-javascript-type-confusion-bypassed-input-validation/)  
+[Hostname spoofing](https://hackerone.com/reports/678487)  
+[Unicode Normalization](https://book.hacktricks.wiki/en/pentesting-web/unicode-injection/index.html)  
+[Alternative Unicode Character](https://appcheck-ng.com/wp-content/uploads/unicode_normalization.html)  
+[SSRF Gopher](https://book.hacktricks.wiki/en/pentesting-web/ssrf-server-side-request-forgery/index.html#gopher)  
