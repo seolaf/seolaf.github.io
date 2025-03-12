@@ -138,25 +138,30 @@ services:
 ```bash
 docker-compose up -d
 ```
+최신 버전을 사용한다면,
+```bash
+docker compose build
+docker compose up -d
+```
 #### Docker Compose의 다양한 옵션
 1. 파일이 다른 이름인 경우: `-f` 옵션을 사용한다.
    ```bash
-   Copydocker-compose -f custom-compose.yml up -d
+   docker-compose -f custom-compose.yml up -d
    ```
 2. 특정 서비스만 실행하려면:
    ```bash
-   Copydocker-compose up -d web database  # web과 database 서비스만 실행
+   docker-compose up -d web database  # web과 database 서비스만 실행
    ```
 3. 실행 중인 서비스 확인:
    ```bash
-   Copydocker-compose ps
+   docker-compose ps
    ```
 4. 로그 확인:
    ```bash
-   Copydocker-compose logs -f  # 모든 서비스의 로그를 실시간으로 확인
+   docker-compose logs -f  # 모든 서비스의 로그를 실시간으로 확인
    ```
 5. 서비스 중지 및 삭제:
    ```bash
-   Copydocker-compose down  # 컨테이너 중지 및 삭제
+   docker-compose down  # 컨테이너 중지 및 삭제
    docker-compose down -v  # 볼륨까지 함께 삭제
    ```
