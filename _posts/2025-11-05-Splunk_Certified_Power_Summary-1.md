@@ -6,7 +6,7 @@ categories: [research, splunk]
 tags: [splunk]
 ---
 
-
+# Core Components & Deployments
 ## 3대 핵심 구성 요소
 
 **Forwarder** → **Indexer** → **Search Head**
@@ -40,6 +40,9 @@ tags: [splunk]
 - **Indexer Cluster**: 데이터 복제로 가용성 확보
 - **Deployment Server**: 다수의 forwarder 관리
 
+
+
+# Getting Data into Splunk
 ## Data Pipeline 4단계
 
 1. **Input**: 데이터 수집
@@ -78,6 +81,9 @@ tags: [splunk]
 - Indexer가 처리
 - License 사용량 확인 (일일 데이터 수집량)
 
+
+
+# App vs AddOn
 ## App
 
 ### 특징
@@ -114,6 +120,9 @@ tags: [splunk]
 - 직접 App/AddOn 개발 및 배포 가능
 - **중요**: Splunk 지원 App/TA는 CIM에 자동 매핑
 
+
+
+# The Basics of Searching
 ## Splunk 인터페이스
 
 ### 주요 메뉴
@@ -196,6 +205,9 @@ fail*
 - **Save As**: Report/Alert로 저장
 - **Event Sampling**: 샘플 제한
 
+
+
+# Knowledge Objects (KOs)
 ## Knowledge Objects란?
 
 - 분석에 유용한 도구들
@@ -307,11 +319,9 @@ Purchases Made on Webstore
 - Read: Everyone
 - Write: Admin
 
-## 핵심 포인트
-- Settings → Knowledge에서 모든 KO 관리
-- 적절한 Permission 설정 필수
-- 네이밍 컨벤션 준수
 
+
+# About the Fields
 ## Fields란?
 
 - **Key-Value Pair** 형태

@@ -6,7 +6,7 @@ categories: [research, splunk]
 tags: [splunk]
 ---
 
-
+# Search Processing Language (SPL)
 ## Splunk 구문 색상
 
 **Orange (주황색)**
@@ -134,6 +134,9 @@ index=web action=purchase
 | stats count as "Total Purchases"
 ```
 
+
+
+# Transforming Your Search
 ## Transforming Command란?
 
 - 결과를 데이터 테이블로 변환
@@ -194,6 +197,9 @@ index=security
 - 다양한 통계 함수 지원
 - Splunk Docs에서 전체 함수 목록 확인 권장
 
+
+
+# Transaction Command
 ## Transaction이란?
 
 - 관련 이벤트를 필드 기준으로 그룹화
@@ -261,6 +267,9 @@ index=web status=404
 | transaction JSESSIONID
 ```
 
+
+
+# Manipulating Your Data
 ## eval 명령어
 
 ### 기능
@@ -336,6 +345,9 @@ index=web status=404
 index=security user=inet
 ```
 
+
+
+# Field Extraction
 ## Field Extraction 방법
 
 ### Regex
@@ -403,6 +415,9 @@ rex field=<source_field> "(?<new_field_name>regex_pattern)"
 - Filter by "Made by me"
 - Edit/Delete 가능
 
+
+
+# Lookups
 ## Lookup이란?
 
 - 주로 **CSV 파일** 형태의 정적 데이터
