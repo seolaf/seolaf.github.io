@@ -28,17 +28,17 @@ tags: [splunk]
 ## SPL 구조 (좌→우)
 
 ### 1단계: 데이터 위치 지정
-```spl
+```
 index=web OR index=security
 ```
 
 ### 2단계: 명령 실행
-```spl
+```
 | stats sum(bytes) as Total_Bytes
 ```
 
 ### 3단계: 결과 포맷
-```spl
+```
 | eval Total_Bytes=tostring(Total_Bytes, "commas")
 ```
 
@@ -46,32 +46,32 @@ index=web OR index=security
 
 **table**
 - 지정한 필드로 테이블 생성
-```spl
+```
 | table host, source, action
 ```
 
 **rename**
 - 필드명 변경
-```spl
+```
 | rename categoryID as Category
 ```
 
 **fields**
 - 특정 필드 포함/제외
-```spl
+```
 | fields + host, source    # 포함
 | fields - _raw            # 제외
 ```
 
 **dedup**
 - 중복 제거
-```spl
+```
 | dedup user
 ```
 
 **sort**
 - 결과 정렬
-```spl
+```
 | sort -bytes              # 내림차순
 | sort +bytes              # 오름차순
 ```
@@ -84,7 +84,7 @@ index=web OR index=security
 ## 명령어 실습
 
 ### table
-```spl
+```
 index=web
 | table clientip, action, categoryId, status
 ```
@@ -92,7 +92,7 @@ index=web
 - null 값 제거: `| where isnotnull(action)`
 
 ### rename
-```spl
+```
 | rename action as Action, clientip as "Shoppers IP"
 ```
 - 여러 필드는 쉼표로 구분
@@ -101,19 +101,19 @@ index=web
 ### fields vs table
 
 **fields**
-```spl
+```
 | fields clientip, action, categoryId
 ```
 - 이벤트 형식으로 표시
 
 **table**
-```spl
+```
 | table clientip, action, categoryId
 ```
 - 테이블 형식으로 표시
 
 ### dedup
-```spl
+```
 | table clientip
 | dedup clientip
 ```
@@ -121,14 +121,14 @@ index=web
 - 대안: `| stats count by clientip`
 
 ### sort
-```spl
+```
 | sort -count        # 내림차순 (-)
 | sort +count        # 오름차순 (+)
 ```
 - 또는 필드명 클릭으로 정렬 가능
 
 ## 실전 예시
-```spl
+```
 index=web action=purchase
 | top limit=6 categoryId
 | stats count as "Total Purchases"
@@ -146,7 +146,7 @@ index=web action=purchase
 ## 3가지 Transforming Commands
 
 ### top
-```spl
+```
 | top limit=10 field        # 기본값: 10개
 | top limit=1 categoryId    # 가장 많은 값
 | top field showperc=false  # 퍼센트 숨김
@@ -156,14 +156,14 @@ index=web action=purchase
 - Argument로 개수 조정 가능
 
 ### rare
-```spl
+```
 | rare limit=1 categoryId   # 가장 드문 값
 ```
 - top의 반대
 - 가장 드문 필드 값 표시
 
 ### stats
-```spl
+```
 | stats sum(bytes)                    # 합계
 | stats count by categoryId           # 그룹별 개수
 | stats dc(categoryId)                # 고유 값 개수
@@ -172,13 +172,13 @@ index=web action=purchase
 ```
 
 ### 다중 필드
-```spl
+```
 | stats count by referer_domain, action
 | stats sum(count) by referer_domain
 ```
 
 ### 복합 예시
-```spl
+```
 index=security
 | stats values(user) as "Login Name", count as Attempts by source_ip
 | fillnull value="No Data Available"
@@ -245,7 +245,7 @@ index=security
 ## 실습 예시
 
 ### 웹 세션 분석
-```spl
+```
 index=web
 | transaction clientip maxspan=3m maxpause=3s endswith=purchase
 | eval duration = tostring(duration, "duration")
@@ -253,7 +253,7 @@ index=web
 ```
 
 ### SSH 실패 로그인
-```spl
+```
 index=security
 | transaction source_ip startswith="SSHD" maxspan=3m maxpause=3s
 | eval duration = tostring(duration, "duration")
@@ -262,7 +262,7 @@ index=security
 ```
 
 ### HTTP 404 에러 분석
-```spl
+```
 index=web status=404
 | transaction JSESSIONID
 ```
@@ -281,14 +281,14 @@ index=web status=404
 ### 시간 변환
 
 **Epoch → Human Readable**
-```spl
+```
 | eval epoch_time=strptime(_time, "%s")
 | eval human_time=strftime(epoch_time, "%m/%d/%Y %H:%M")
 | eval DayOfYear=strftime(_time, "%j")
 ```
 
 ### case 함수
-```spl
+```
 | eval status_code=case(
     status==404, "Not Found",
     status==400, "Bad Request",
@@ -298,12 +298,12 @@ index=web status=404
 ```
 
 ### count + eval 조합
-```spl
+```
 | stats count(eval(status==404)) as "Number of Not Founds"
 ```
 
 ### MD5 해시
-```spl
+```
 | eval hash=md5(file)
 | table file, hash
 ```
@@ -316,7 +316,7 @@ index=web status=404
 - **첫 번째 파이프 이전에 사용 불가**
 
 ### 문법
-```spl
+```
 | where status==404                    # 필드 값 비교
 | where like(src, "64.%")             # 패턴 매칭
 ```
@@ -337,7 +337,7 @@ index=web status=404
 - **검색 어디서나 사용 가능** (where와 차이점)
 
 ### 비교: where vs search
-```spl
+```
 # where: Boolean 로직, 첫 파이프 전 불가
 | where src="64.241.74.165"
 
@@ -376,7 +376,7 @@ index=security user=inet
 7. Finish
 
 ## rex 명령어
-```spl
+```
 | rex field=_raw "(?<email>\S+@\S+\.com)"
 ```
 
@@ -386,12 +386,12 @@ index=security user=inet
 - 정규표현식 직접 작성
 
 **구조**
-```spl
+```
 rex field=<source_field> "(?<new_field_name>regex_pattern)"
 ```
 
 ## erex 명령어
-```spl
+```
 | erex files examples="text/css,image/gif"
 ```
 
@@ -447,14 +447,14 @@ rex field=<source_field> "(?<new_field_name>regex_pattern)"
 ## Lookup 명령어
 
 ### inputlookup
-```spl
+```
 | inputlookup peopleinfo.csv where first_name="Henry"
 ```
 - Lookup 파일 내용 조회
 - WHERE로 필터링
 
 ### lookup
-```spl
+```
 index=web action=purchase
 | lookup productinfo.csv productID OUTPUT description
 | table productID, description
@@ -465,7 +465,7 @@ index=web action=purchase
 - **OUTPUT**: 추가할 필드
 
 ### outputlookup
-```spl
+```
 index=web
 | table productID
 | dedup productID
@@ -476,7 +476,7 @@ index=web
 ## 실전 예시
 
 ### Product ID 보강
-```spl
+```
 index=web action=purchase
 | lookup productinfo.csv productID OUTPUT description
 | stats count by productID, description

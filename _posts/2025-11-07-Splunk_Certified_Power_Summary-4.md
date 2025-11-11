@@ -25,7 +25,7 @@ tags: [splunk]
 3. 검색 재실행으로 tag 필드 생성
 
 ### 검색
-```spl
+```
 tag=login account_name=Hailie
 | timechart span=1d count
 ```
@@ -50,7 +50,7 @@ tag=login account_name=Hailie
 - 카테고리별 분류 가능
 
 ### 생성 및 설정
-```spl
+```
 index=web action=purchase
 ```
 1. Save as Event Type
@@ -100,14 +100,14 @@ index=web action=purchase
 
 ## Macro 실행
 ### Backtick 사용
-```spl
+```
 `macro_name`
 `macro_name(argument)`
 ```
 
 ## Arguments
 ### 사용 방법
-```spl
+```
 # Macro definition
 log_level=$input$
 | table host, log_level, event_message, _time
@@ -122,7 +122,7 @@ loglevel(1)
 - Macro 이름에 argument 개수 표시 필수 `(1)`, `(2)` 등
 
 ### 실행
-```spl
+```
 `loglevel(error)`
 `loglevel(info)`
 `loglevel(*)`
@@ -133,7 +133,7 @@ loglevel(1)
 ### 1. 간단한 Macro (Arguments 없음)
 
 **salesmade**
-```spl
+```
 index=web action=purchase
 | lookup productinfo.csv productID OUTPUT description
 | where isnotnull(description)
@@ -142,32 +142,32 @@ index=web action=purchase
 ```
 
 **사용**
-```spl
+```
 `salesmade`
 ```
 
 ### 2. Top 5 IPs
 **top5**
-```spl
+```
 (index=web OR index=security)
 | top limit=5 src
 ```
 
 **사용**
-```spl
+```
 `top5`
 ```
 
 ### 3. Arguments 사용
 
 **loglevel(1)**
-```spl
+```
 index=_internal log_level=$input$
 | table host, log_level, event_message, _time
 ```
 
 **사용**
-```spl
+```
 `loglevel(error)`
 `loglevel(info)`
 `loglevel(warn)`

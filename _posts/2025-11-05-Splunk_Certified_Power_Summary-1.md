@@ -169,20 +169,20 @@ tags: [splunk]
 ## Boolean 연산자
 
 ### OR
-```spl
+```
 index=web OR index=security
 ```
 - A 또는 B 매칭
 
 ### NOT
-```spl
+```
 NOT action=purchase
 ```
 - **주의**: `action!=purchase`와 다름
 - NOT은 더 많은 이벤트 반환 (모든 관련 이벤트 포함)
 
 ## 수학 연산자
-```spl
+```
 action=purchase          # 같음
 action!=purchase         # 같지 않음
 bytes>268               # 초과
@@ -192,7 +192,7 @@ bytes<=268              # 이하
 ```
 
 ## 와일드카드
-```spl
+```
 fail*
 ```
 - 패턴 매칭 가능
@@ -264,7 +264,7 @@ SOC_analyst_alert_failed_logins
 ## Alert 생성 실습
 
 ### 검색 예시
-```spl
+```
 index=security eventtype="failed login" user=admin source="192.168.1.1"
 ```
 
@@ -300,7 +300,7 @@ SOC_Alert_ExcessiveFailedLogins
 ## Event Type 생성
 
 ### 예시
-```spl
+```
 index=web action=purchase
 ```
 
@@ -331,7 +331,7 @@ Purchases Made on Webstore
 ## 검색 기본 동작
 
 **Operator 없을 때**
-```spl
+```
 index=web sourcetype=access_combined categoryID=sports
 ```
 - 자동으로 **AND** 연산자 적용
@@ -367,13 +367,13 @@ index=web sourcetype=access_combined categoryID=sports
 ## 중요: != vs NOT
 
 **Does Not Equal (!=)**
-```spl
+```
 categoryID!=sports
 ```
 - categoryID 필드가 존재하고 값이 sports가 아닌 이벤트만 반환
 
 **NOT Operator**
-```spl
+```
 NOT categoryID=sports
 ```
 - categoryID가 sports가 아닌 이벤트 + categoryID 필드가 없는 모든 이벤트 반환

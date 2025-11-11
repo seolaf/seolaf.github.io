@@ -22,7 +22,7 @@ tags: [splunk]
 **Settings → Fields → Field Aliases → Add New**
 
 ### 실습 예시
-```spl
+```
 # 목표: 모든 IP 필드를 source_ip로 통일
 
 # Web (access_combined)
@@ -36,7 +36,7 @@ ip_address → source_ip
 ```
 
 ### 검색
-```spl
+```
 source_ip=*
 ```
 - 모든 source type에서 통일된 필드명으로 검색
@@ -52,14 +52,14 @@ source_ip=*
 **Settings → Fields → Calculated Fields → Add New**
 
 ### 예시: Bytes → Megabytes
-```spl
+```
 # Source type: access_combined
 # Field name: megs
 # Eval expression: bytes/1024/1024
 ```
 
 ### 사용
-```spl
+```
 index=web
 | stats sum(megs) by file
 | sort -megs
@@ -92,7 +92,7 @@ index=web
 
 
 ### dbinspect 명령어
-```spl
+```
 | dbinspect index=*
 | table bucketId, state, index, modTime
 
@@ -130,7 +130,7 @@ index=web
 - Internal metrics
 
 ### 사용 예시
-```spl
+```
 # 에러 발생 검색
 index=web
 | stats values(host) by _time
@@ -192,7 +192,7 @@ index=web
 ### 1. datamodel
 
 **Command로 사용**
-```spl
+```
 | datamodel Web search
 | datamodel Authentication search
 ```
@@ -200,7 +200,7 @@ index=web
 - 데이터 검증 용도
 
 **Argument로 사용**
-```spl
+```
 | datamodel Network_Traffic All_Traffic search 
 | search sourcetype=cisco:* 
 | stats count by sourcetype
@@ -210,13 +210,13 @@ index=web
 ### 2. tstats
 
 **구문**
-```spl
+```
 | tstats <stats-function> from datamodel=<datamodel-name> 
   where <where-conditions> by <field-list>
 ```
 
 **예시**
-```spl
+```
 # 기본 카운트
 | tstats count from datamodel=Web
 
@@ -248,12 +248,12 @@ index=web
 ### Web Data Model 검색
 
 **tstats 사용**
-```spl
+```
 | tstats count from datamodel=Web
 ```
 
 **datamodel 명령어로 Source Type 확인**
-```spl
+```
 | datamodel Web search 
 | stats values(sourcetype)
 ```
@@ -261,20 +261,20 @@ index=web
 ### Authentication Data Model
 
 **Root Dataset 검색**
-```spl
+```
 | datamodel Authentication search
 | stats count by sourcetype
 ```
 
 **Child Dataset 검색**
-```spl
+```
 | datamodel Authentication Successful_Authentication search 
   sourcetype=linux_secure
 | table host, Authentication.user, source, action, _raw
 ```
 
 ### Network Traffic
-```spl
+```
 | datamodel Network_Traffic All_Traffic search 
 | search sourcetype=cisco:* 
 | stats count by sourcetype
@@ -357,7 +357,7 @@ dest → Authentication.dest
 
 ### 1단계: Event Type 생성
 **Settings → Event Types → New**
-```spl
+```
 # Name: Example_web1
 # Search: index=web host=web1
 # Tag: web
@@ -407,17 +407,17 @@ referer_domain    →    http_referer_domain
 ## Data Model 확인
 
 ### Pivot으로 확인
-```spl
+```
 Settings → Data Models → Web → Pivot
 ```
 
 ### tstats로 확인
-```spl
+```
 | tstats count from datamodel=Web
 ```
 
 ### Event Count 확인
-```spl
+```
 | datamodel Web search
 | stats count
 ```
@@ -441,7 +441,7 @@ Settings → Data Models → Web → Pivot
 ## 중요 포인트
 
 ### Tags 활용
-```spl
+```
 # Web Data Model은 tag=web 필요
 tag=web
 ```

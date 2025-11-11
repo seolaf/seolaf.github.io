@@ -40,7 +40,7 @@ tags: [splunk]
 - 자동 시각화 생성
 
 ### timechart
-```spl
+```
 index=web
 | timechart avg(bytes) by host
 | timechart count by action
@@ -49,7 +49,7 @@ index=web
 - Line chart 권장
 
 ### chart
-```spl
+```
 index=web
 | chart count over host by description
 | chart useother=f usenull=f limit=0
@@ -65,7 +65,7 @@ index=web
 - **Stacked 100**: 백분율 누적
 
 ### Chart Overlay
-```spl
+```
 | timechart count by action
 ```
 - 여러 메트릭을 한 차트에 표시
@@ -80,7 +80,7 @@ index=web
 - **No**: 하나의 Y축 공유
 
 ### Arguments
-```spl
+```
 useother=f          # "other" 제거
 usenull=f           # null 값 제거
 limit=0             # 모든 값 표시 (기본값: 10)
@@ -89,7 +89,7 @@ limit=0             # 모든 값 표시 (기본값: 10)
 ## Dashboard 생성
 
 ### Single Value
-```spl
+```
 index=web action=purchase
 | stats count
 ```
@@ -97,20 +97,20 @@ index=web action=purchase
 - 색상 조건부 포맷팅 가능
 
 ### Pie Chart
-```spl
+```
 | stats count by action
 ```
 - 비율 표시에 적합
 
 ### Bar Chart
-```spl
+```
 index=web action=purchase
 | lookup productinfo.csv productID OUTPUT description
 | chart count over host by description useother=f limit=0
 ```
 
 ### Line Chart
-```spl
+```
 index=security eventtype=failed_login
 | timechart count by user limit=5 useother=f usenull=f
 ```
@@ -137,7 +137,7 @@ index=security eventtype=failed_login
 - **WMA**: Weighted Moving Average (가중 이동평균)
 
 ### 문법
-```spl
+```
 | timechart count
 | trendline sma5(count) as "Moving Average"
 ```
@@ -145,7 +145,7 @@ index=security eventtype=failed_login
 - period 지정 필수
 
 ### 예시
-```spl
+```
 index=_internal sourcetype=splunkd
 | timechart count
 | trendline sma5(count) as "Moving Average of Total Events"
@@ -158,7 +158,7 @@ index=_internal sourcetype=splunkd
 - City, Country, Latitude, Longitude 생성
 
 ### 문법
-```spl
+```
 | iplocation clientip
 ```
 
@@ -170,7 +170,7 @@ index=_internal sourcetype=splunkd
 - lon (Longitude)
 
 ### 예시
-```spl
+```
 index=web
 | iplocation clientip
 | table clientip, City, Country, lat, lon
@@ -187,13 +187,13 @@ index=web
 - `longfield`: 경도 필드
 
 ### 문법
-```spl
+```
 | geostats latfield=lat longfield=lon count by email
 | geostats latfield=lat longfield=lon count by action globallimit=10
 ```
 
 ### 예시
-```spl
+```
 index=web
 | iplocation clientip
 | geostats latfield=lat longfield=lon count by action
@@ -206,7 +206,7 @@ index=web
 - 열/행 합계 추가
 
 ### 문법
-```spl
+```
 | addtotals row=f col=t label="Total" labelfield=lon fieldname=purchase
 ```
 
@@ -230,7 +230,7 @@ index=web
 - 줌 레벨 수동 조정
 
 ### 활용 사례
-```spl
+```
 # 판매량 상위 지역
 | where purchase > 500
 
@@ -325,7 +325,7 @@ Value: $click.value2$
 - Shared Time Picker 설정
 
 ### Token 사용 예시
-```spl
+```
 index=_internal log_level=$loglevel$
 | eval Date=strftime(_time, "%m/%d/%Y")
 | table log_level, reason, Date
@@ -336,7 +336,7 @@ index=_internal log_level=$loglevel$
 ## 실습 예시
 
 ### Dashboard with Inputs
-```spl
+```
 # Panel 1: 사용자 입력 기반 검색
 index=_internal log_level=$loglevel$
 | table log_level, reason, Date
@@ -346,7 +346,7 @@ index=* $userclick$
 ```
 
 ### Report 생성
-```spl
+```
 host=mycomputer *.exe
 | table Name, Path, CommandLine
 | dedup Name
@@ -426,7 +426,7 @@ host=mycomputer *.exe
 ## Alert 생성 실습
 
 ### 예시: Wireshark 실행 감지
-```spl
+```
 index=my_computer_logs remote_port=80 process_name="Wireshark.exe"
 | stats values(process_name)
 ```
